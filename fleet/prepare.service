@@ -1,0 +1,18 @@
+[Unit]
+Description=Write an /etc/hosts file to allow reverse lookup
+After=network.target
+
+[Service]
+Type=simple
+RemainAfterExit=true
+Restart=on-failure
+RestartSec=15
+
+# Ensure there's a rudimentary hosts file in place
+ExecStart=/bin/sh -c 'if ! grep "localhost" /etc/hosts; then echo "127.0.0.1 localhost.localdomain localhost" >> /etc/hosts; fi'
+
+# Enable reverse lookup of the node hostname. 
+ExecStartPost=/bin/sh -c 'if ! grep `hostname` /etc/hosts; then echo "`ifconfig eth0|head -2|tail -1|tr -s " " " "|cut -d " " -f 3` `hostname` `hostname | cut -d . -f 1`" >> /etc/hosts; fi'
+
+[X-Fleet]
+Global=true

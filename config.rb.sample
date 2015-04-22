@@ -1,0 +1,59 @@
+# Size of the CoreOS cluster created by Vagrant
+#$num_instances = 1
+
+# Name to give instances
+#$instance_name = "core-%02d"
+
+
+## VirtualBox settings
+#$vb_gui = false
+#$vb_memory = 1024
+#$vb_cpus = 1
+
+# Official CoreOS channel from which updates should be downloaded
+#$vb_update_channel = 'stable'
+
+# Ports to forward in VirtualBox
+#$vb_forward_ports = [9200, 9300]
+
+
+## Amazon AWS settings
+#$aws_access_key_id = ''
+#$aws_secret_access_key = ''
+#$aws_keypair_name = ''
+
+#$aws_region = 'eu-central-1'             # Uses the default region if not specified
+#$aws_availability_zone = 'eu-central-1a' # Uses the default zone if not specified
+#$aws_subnet_id = 'subnet-1234abcd'       # Uses the default subnet if not specified
+#$aws_security_groups = ['sg-defg1234']   # Uses the default security group if not specified
+
+# CoreOS image: https://coreos.com/docs/running-coreos/cloud-providers/ec2/
+#$aws_ami = 'ami-0e300d13'                # coreos-stable-hvm in eu-central-1
+
+# Path to unencrypted AWS private key in PEM format to use for provisioning
+#$aws_keypair_path = '~/.ssh/id_rsa'
+
+# EC2 instance type: http://aws.amazon.com/ec2/instance-types/
+#$aws_instance_type = 'm3.medium'         # Minimum usable size (1 vCPU, 3.75Gb RAM)
+#$aws_instance_type = 'c4.4xlarge'        # Production type (16 vCPU, 30Gb RAM)
+
+# Size of root filesystem in gigabytes
+#$aws_rootfs_size = 32
+
+# Elastic IPs to assign to cluster
+#$aws_elastic_ips = {'eipalloc-123456' => '10.1.2.3'}
+
+# Automatically replace the etcd discovery token on 'vagrant up'
+userdata = File.join(File.dirname(__FILE__), "user-data")
+if File.exists?(userdata) && ARGV[0].eql?('up')
+  require 'open-uri'
+  require 'yaml'
+ 
+  token = open("https://discovery.etcd.io/new?size=#{$num_instances}").read
+  
+  data = YAML.load(IO.readlines(userdata)[1..-1].join)
+  data['coreos']['etcd']['discovery'] = token
+ 
+  yaml = YAML.dump(data)
+  File.open(userdata, 'w') { |file| file.write("#cloud-config\n\n#{yaml}") }
+end

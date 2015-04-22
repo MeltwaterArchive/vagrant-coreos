@@ -1,0 +1,30 @@
+[Unit]
+Description=Associate EIP to this instance
+After=docker.service
+Requires=docker.service
+
+[Service]
+Type=simple
+RemainAfterExit=true
+EnvironmentFile=/etc/environment
+Environment=IMAGE=meltwater/awscli:latest NAME=<%= eip %>
+
+# Allow docker pull to take some time
+TimeoutStartSec=0
+
+# Don't kill -9 the docker process
+KillMode=none
+
+ExecStartPre=-/usr/bin/docker kill $NAME
+ExecStartPre=-/usr/bin/docker rm -v $NAME
+ExecStartPre=-/usr/bin/docker pull $IMAGE
+ExecStart=/bin/sh -c " \
+	docker run --rm --name $NAME \
+	-e AWS_ACCESS_KEY_ID=<%= $aws_access_key_id %> \
+	-e AWS_SECRET_ACCESS_KEY=<%= $aws_secret_access_key %> \
+	$IMAGE ec2 associate-address \
+		--instance-id \"`curl -sL http://169.254.169.254/2014-11-05/meta-data/instance-id`\" \
+		--allocation-id <%= eip %>"
+
+[X-Fleet]
+Conflicts=elastic-ip-*.service
