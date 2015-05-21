@@ -23,12 +23,12 @@
 #$aws_keypair_name = ''
 
 #$aws_region = 'eu-central-1'             # Uses the default region if not specified
-#$aws_availability_zone = 'eu-central-1a' # Uses the default zone if not specified
-#$aws_subnet_id = 'subnet-1234abcd'       # Uses the default subnet if not specified
+#$aws_availability_zone = 'eu-central-1b' # Uses the default zone if not specified
+#$aws_subnet_id = 'subnet-4a718331'       # Uses the default subnet if not specified
 #$aws_security_groups = ['sg-defg1234']   # Uses the default security group if not specified
 
 # CoreOS image: https://coreos.com/docs/running-coreos/cloud-providers/ec2/
-#$aws_ami = 'ami-0e300d13'                # coreos-stable-hvm in eu-central-1
+#$aws_ami = 'ami-92003c8f'                # coreos-stable-hvm in eu-central-1
 
 # Path to unencrypted AWS private key in PEM format to use for provisioning
 #$aws_keypair_path = '~/.ssh/id_rsa'
