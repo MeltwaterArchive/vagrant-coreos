@@ -1,0 +1,34 @@
+[Unit]
+Description=Elasticsearch node
+After=docker.service prepare.service
+Requires=docker.service
+
+[Service]
+EnvironmentFile=/etc/environment
+Environment=IMAGE=meltwater/elasticsearch-aws:latest NAME=elasticsearch
+
+# Allow docker pull to take some time
+TimeoutStartSec=600
+
+# Restart on failures
+KillMode=none
+Restart=always
+RestartSec=15
+
+ExecStartPre=-/usr/bin/docker kill $NAME
+ExecStartPre=-/usr/bin/docker rm $NAME
+ExecStartPre=-/bin/sh -c 'if ! docker images | tr -s " " : | grep "^${IMAGE}:"; then docker pull "${IMAGE}"; fi'
+ExecStart=/usr/bin/docker run --name $NAME --net=host \
+	-v /meltwater/elasticsearch:/usr/share/elasticsearch/data \
+	$IMAGE \
+	-Des.node.name=%H -Des.network.publish_host=${COREOS_PRIVATE_IPV4} \
+	-Des.cloud.aws.access_key=<%= $aws_access_key_id %> \
+	-Des.cloud.aws.secret_key=<%= $aws_secret_access_key %> \
+	-Des.discovery.ec2.availability_zones=<%= $aws_availability_zone %> \
+	-Des.cloud.aws.region=<%= $aws_region %> \
+	-Des.discovery.ec2.groups=<%= $aws_security_groups.join(',') %> 
+
+ExecStop=/usr/bin/docker stop $NAME
+
+[X-Fleet]
+Global=true

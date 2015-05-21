@@ -36,11 +36,13 @@ if File.exist?(CONFIG)
 end
 
 def render(templatepath, destinationpath, variables)
-  template = File.open(templatepath, "rb").read
-  content = ERB.new(template).result(OpenStruct.new(variables).instance_eval { binding })
-  outputpath = destinationpath.end_with?('/') ? "#{destinationpath}/#{File.basename(templatepath, '.erb')}" : destinationpath
-  FileUtils.mkdir_p(File.dirname(outputpath))
-  File.open(outputpath, "wb") { |f| f.write(content) }
+  if File.file?(templatepath)
+    template = File.open(templatepath, "rb").read
+    content = ERB.new(template).result(OpenStruct.new(variables).instance_eval { binding })
+    outputpath = destinationpath.end_with?('/') ? "#{destinationpath}/#{File.basename(templatepath, '.erb')}" : destinationpath
+    FileUtils.mkdir_p(File.dirname(outputpath))
+    File.open(outputpath, "wb") { |f| f.write(content) }
+  end
 end
   
 Vagrant.configure("2") do |config|
@@ -89,6 +91,8 @@ Vagrant.configure("2") do |config|
   
   config.ssh.forward_agent = true
   config.ssh.username = "core"
+
+  config.nfs.functional = false
   
   (1..$num_instances).each do |i|
     config.vm.define vm_name = $instance_name % i do |config|
